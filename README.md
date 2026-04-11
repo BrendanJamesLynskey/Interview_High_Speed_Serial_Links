@@ -55,6 +55,8 @@ A comprehensive interview preparation repository covering high-speed serial link
 
 ### 06 - System Integration
 - [Package and PCB Routing](06_system_integration/package_and_pcb_routing.md) - Controlled impedance, BGA breakout, stackup design, material selection
+- [PCB Power Delivery](06_system_integration/pcb_power_delivery.md) - Target impedance, decoupling hierarchy, embedded capacitance, PMIC placement, transient analysis, PDN verification
+- [PCB Thermal Management](06_system_integration/pcb_thermal_management.md) - SerDes power dissipation, thermal-electrical coupling, thermal vias, cooling strategies, verification
 - [Retimer and Redriver Design](06_system_integration/retimer_and_redriver_design.md) - When to use each, architecture, vendors, power/latency tradeoffs
 - [Testing and Compliance](06_system_integration/testing_and_compliance.md) - BERT, oscilloscope, TDR, VNA, stressed receiver testing, COM
 - Worked Problems:
@@ -90,4 +92,4 @@ Contributions are welcome. Please open an issue or submit a pull request with co
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-Last updated: 2026-04-07
+Last updated: 2026-04-11
