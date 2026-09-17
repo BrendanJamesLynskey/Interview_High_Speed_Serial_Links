@@ -86,10 +86,21 @@ Contributions are welcome. Please open an issue or submit a pull request with co
 
 ## Related Repositories
 
-- Additional interview preparation materials may be found in related repositories covering analog/mixed-signal design, digital VLSI, and FPGA topics.
+These notes are the written treatment of this ground. The **visual, computed and
+interactive companion** is the Signal Integrity deck series, which works the same topics
+against one channel with every figure produced by a model rather than quoted.
+
+| Repository | How it relates |
+| --- | --- |
+| **[Signal Integrity &amp; High-Speed Digital Design](https://github.com/BrendanJamesLynskey/Signal_Integrity)** | **The companion series: eleven decks, 130 slides.** [Crosstalk](https://brendanjameslynskey.github.io/Signal_Integrity/06-crosstalk/) computes the NEXT and FEXT of section 05; [Jitter](https://brendanjameslynskey.github.io/Signal_Integrity/08-jitter/) decomposes what sections 02 and 03 describe; [Power integrity](https://brendanjameslynskey.github.io/Signal_Integrity/07-power-integrity/) computes the supply-noise coupling path; [Measurement](https://brendanjameslynskey.github.io/Signal_Integrity/10-measurement-and-correlation/) and [COM](https://brendanjameslynskey.github.io/Signal_Integrity/11-com-and-compliance/) cover section 06's testing and compliance material |
+| [Equalisation in High-Speed Serial Links](https://github.com/BrendanJamesLynskey/SerDes_Equalisation) | One 28 GBd backplane channel taken from S-parameters to a closed link budget &mdash; the worked example behind sections 01 and 03 |
+| [Matrix Methods in Network Parameters](https://github.com/BrendanJamesLynskey/Matrix_Methods_Network_Parameters) | The S-parameter theory behind section 01's channel modelling |
+| [LPDDRx Layout &mdash; interview preparation](https://github.com/BrendanJamesLynskey/Interview_LPDDRx_Layout) | The parallel-bus counterpart: memory interface layout, skew and termination |
+| [Modern SoC Design](https://github.com/BrendanJamesLynskey/SoC) | The silicon side &mdash; deck 04 on SerDes and I/O, deck 09 on power delivery, deck 13 on clocks and resets |
+| [Hardware](https://github.com/BrendanJamesLynskey/Hardware#signal-integrity--high-speed-digital-design) | The index all of this sits in |
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-Last updated: 2026-04-11
+Last updated: 2026-09-17
