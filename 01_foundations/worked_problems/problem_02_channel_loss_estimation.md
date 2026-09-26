@@ -51,39 +51,26 @@ Dielectric loss scales linearly with frequency and is proportional to the loss t
 alpha_dielectric(f) = (pi * f * sqrt(Dk) * Df) / c * (conversion to dB/inch)
 ```
 
-A simpler engineering approximation is:
+For a stripline (TEM) the dielectric term does not depend on the trace geometry. Converting Np/m to dB/inch, with f in GHz:
 
 ```
-alpha_dielectric(f) = alpha_d_ref * (f / f_ref) * (Df / Df_ref)
+alpha_dielectric [dB/inch] = 2.3 * f[GHz] * sqrt(Dk) * Df
 ```
 
-For typical stripline geometry, the dielectric loss at 1 GHz with Df = 0.020 (standard FR4) is approximately 0.025 dB/inch. Scaling:
+(For standard FR4, Dk = 4, Df = 0.020, this gives 0.092 dB/inch at 1 GHz.)
 
-**Option A (Megtron 6, Df = 0.004):**
-
-```
-alpha_d_A(1 GHz) = 0.025 * (0.004 / 0.020) = 0.005 dB/inch at 1 GHz
-alpha_d_A(28 GHz) = 0.005 * (28 / 1) = 0.140 dB/inch
-```
-
-Note: At frequencies above 10 GHz, the loss tangent typically increases. Using a frequency-adjusted Df at 28 GHz of approximately 0.005 for Megtron 6:
+**Option A (Megtron 6, Dk = 3.6, Df = 0.004):**
 
 ```
-alpha_d_A(28 GHz) = 0.005 * 28 * (correction) ≈ 0.175 dB/inch
+alpha_d_A(28 GHz) = 2.3 * 28 * sqrt(3.6) * 0.004 = 2.3 * 28 * 1.897 * 0.004 = 0.489 dB/inch
 ```
 
-More practically, Megtron 6 datasheets report approximately 0.45-0.55 dB/inch total loss at 28 GHz for similar geometries. Using conductor loss of 0.265 dB/inch, the dielectric component is:
+Note: at frequencies above 10 GHz the loss tangent typically rises, so this is a lower bound.
+
+**Option B (Megtron 7, Dk = 3.4, Df = 0.002):**
 
 ```
-alpha_d_A(28 GHz) ≈ 0.50 - 0.265 ≈ 0.235 dB/inch
-```
-
-**Option B (Megtron 7, Df = 0.002):**
-
-The dielectric loss scales proportionally with Df:
-
-```
-alpha_d_B(28 GHz) ≈ 0.235 * (0.002 / 0.004) = 0.118 dB/inch
+alpha_d_B(28 GHz) = 2.3 * 28 * sqrt(3.4) * 0.002 = 2.3 * 28 * 1.844 * 0.002 = 0.237 dB/inch
 ```
 
 ### Step 4: Calculate total insertion loss per inch at 28 GHz
@@ -91,13 +78,13 @@ alpha_d_B(28 GHz) ≈ 0.235 * (0.002 / 0.004) = 0.118 dB/inch
 **Option A (Megtron 6):**
 
 ```
-alpha_total_A = 0.265 + 0.235 = 0.50 dB/inch
+alpha_total_A = 0.265 + 0.489 = 0.754 dB/inch
 ```
 
 **Option B (Megtron 7):**
 
 ```
-alpha_total_B = 0.265 + 0.118 = 0.383 dB/inch
+alpha_total_B = 0.265 + 0.237 = 0.502 dB/inch
 ```
 
 ### Step 5: Calculate total channel loss for 12-inch trace
@@ -105,19 +92,19 @@ alpha_total_B = 0.265 + 0.118 = 0.383 dB/inch
 **Option A (Megtron 6):**
 
 ```
-IL_A = 12 * 0.50 = 6.0 dB at 28 GHz
+IL_A = 12 * 0.754 = 9.0 dB at 28 GHz
 ```
 
 **Option B (Megtron 7):**
 
 ```
-IL_B = 12 * 0.383 = 4.6 dB at 28 GHz
+IL_B = 12 * 0.502 = 6.0 dB at 28 GHz
 ```
 
 ### Step 6: Calculate the loss difference
 
 ```
-Delta_IL = IL_A - IL_B = 6.0 - 4.6 = 1.4 dB
+Delta_IL = IL_A - IL_B = 9.0 - 6.0 = 3.0 dB
 ```
 
 ### Step 7: Add discontinuity losses
@@ -127,8 +114,8 @@ In practice, the total channel includes via transitions and package losses. Assu
 ```
 IL_discontinuities = 2 * 0.5 + 2 * 1.5 = 4.0 dB
 
-Total_IL_A = 6.0 + 4.0 = 10.0 dB
-Total_IL_B = 4.6 + 4.0 = 8.6 dB
+Total_IL_A = 9.0 + 4.0 = 13.0 dB
+Total_IL_B = 6.0 + 4.0 = 10.0 dB
 ```
 
 ### Result
@@ -136,17 +123,17 @@ Total_IL_B = 4.6 + 4.0 = 8.6 dB
 | Parameter | Megtron 6 | Megtron 7 | Difference |
 |-----------|-----------|-----------|------------|
 | Conductor loss (28 GHz) | 0.265 dB/inch | 0.265 dB/inch | 0 |
-| Dielectric loss (28 GHz) | 0.235 dB/inch | 0.118 dB/inch | 0.117 dB/inch |
-| Total loss/inch (28 GHz) | 0.50 dB/inch | 0.383 dB/inch | 0.117 dB/inch |
-| Trace loss (12 inches) | 6.0 dB | 4.6 dB | 1.4 dB |
-| Total channel loss | 10.0 dB | 8.6 dB | 1.4 dB |
+| Dielectric loss (28 GHz) | 0.489 dB/inch | 0.237 dB/inch | 0.252 dB/inch |
+| Total loss/inch (28 GHz) | 0.754 dB/inch | 0.502 dB/inch | 0.252 dB/inch |
+| Trace loss (12 inches) | 9.0 dB | 6.0 dB | 3.0 dB |
+| Total channel loss | 13.0 dB | 10.0 dB | 3.0 dB |
 
-The 1.4 dB improvement from Megtron 7 over Megtron 6 translates directly to improved COM margin. For a link that is marginally meeting the 3 dB COM requirement, this improvement could be the difference between pass and fail.
+The 3.0 dB improvement from Megtron 7 over Megtron 6 translates directly to improved COM margin. For a link that is marginally meeting the 3 dB COM requirement, this improvement could be the difference between pass and fail.
 
 ### Key Takeaways
 
-1. At 28 GHz, conductor and dielectric losses are comparable for low-loss materials, but dielectric loss dominates at higher frequencies.
-2. Megtron 7 provides approximately 0.12 dB/inch improvement over Megtron 6 at 28 GHz for this geometry.
-3. For a 12-inch trace, the material upgrade saves 1.4 dB, which is significant but must be weighed against the 3-4x cost premium.
+1. At 28 GHz the dielectric loss already exceeds the conductor loss on Megtron 6 and is comparable to it on Megtron 7; dielectric loss dominates increasingly at higher frequencies.
+2. Megtron 7 provides approximately 0.25 dB/inch improvement over Megtron 6 at 28 GHz.
+3. For a 12-inch trace, the material upgrade saves 3.0 dB, which is significant but must be weighed against the 3-4x cost premium.
 4. Discontinuity losses (vias, packages) are fixed regardless of material and contribute a significant portion of total loss.
 5. At 56 GHz (224G Nyquist), the dielectric loss difference doubles because dielectric loss scales linearly with frequency.

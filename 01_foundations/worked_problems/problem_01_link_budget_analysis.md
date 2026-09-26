@@ -114,8 +114,8 @@ P_rx_equalized = -22.71 + 20.0 = -2.71 dBm
 Including crosstalk noise (estimated at -30 dBm from adjacent aggressors) and random noise (estimated at -28 dBm from receiver thermal noise):
 
 ```
-Total_noise = 10*log10(10^(-30/10) + 10^(-28/10)) = -25.7 dBm
-SNR = P_rx_equalized - Total_noise = -2.71 - (-25.7) = 23.0 dB
+Total_noise = 10*log10(10^(-30/10) + 10^(-28/10)) = -25.9 dBm
+SNR = P_rx_equalized - Total_noise = -2.71 - (-25.9) = 23.2 dB
 Required_SNR_for_BER_1e-6 (PAM4) = ~20 dB
 ```
 
@@ -123,12 +123,12 @@ Required_SNR_for_BER_1e-6 (PAM4) = ~20 dB
 
 ```
 COM (approximate) = SNR_achieved - SNR_required
-COM (approximate) = 23.0 - 20.0 = 3.0 dB
+COM (approximate) = 23.2 - 20.0 = 3.2 dB
 ```
 
 ### Result
 
-The link achieves approximately 3.0 dB of COM, which meets the minimum requirement of 3 dB specified by IEEE 802.3. The link is feasible but has minimal margin, suggesting that any degradation in channel quality (such as manufacturing variation, temperature effects, or aging) could push the link below the threshold. Design improvements to consider include using a lower-loss PCB material or reducing the trace length by 1-2 inches.
+The link achieves approximately 3.2 dB of COM, which meets the minimum requirement of 3 dB specified by IEEE 802.3. The link is feasible but has minimal margin, suggesting that any degradation in channel quality (such as manufacturing variation, temperature effects, or aging) could push the link below the threshold. Design improvements to consider include using a lower-loss PCB material or reducing the trace length by 1-2 inches.
 
 ### Key Takeaways
 

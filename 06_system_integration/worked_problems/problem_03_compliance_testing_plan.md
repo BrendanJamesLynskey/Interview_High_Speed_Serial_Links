@@ -24,7 +24,7 @@ Switching from Megtron 6 (0.75 dB/inch at 16 GHz) to Megtron 7 (0.55 dB/inch at 
 
 ### Step 4: Evaluate Option C - Add a retimer
 
-A retimer divides the channel into two segments. If placed at the midpoint: segment 1 = 7.0 dB (TX pkg + 6 inches trace), segment 2 = 7.0 dB (6 inches trace + connector + RX pkg). Each segment easily achieves COM >= 5 dB.
+A retimer divides the channel into two segments. If placed at the trace midpoint: segment 1 = 1.5 + 6 x 0.75 = 6.0 dB (TX pkg + 6 inches trace), segment 2 = 6 x 0.75 + 2.0 + 1.5 = 8.0 dB (6 inches trace + connector + RX pkg). Moving it to 7.3 inches from the TX balances both segments at 7.0 dB. Each segment easily achieves COM >= 5 dB.
 
 Cost: retimer power (~4W for x16), latency (+5 ns), BOM cost (+5-25).
 

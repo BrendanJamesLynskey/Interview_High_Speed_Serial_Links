@@ -114,7 +114,7 @@ Test your knowledge of PCIe, UCIe, NVLink, and custom AI interconnects.
 8. **C** - PCIe Gen5 operates at 32 GT/s NRZ
 9. **B** - Advanced Package Module uses single-ended signaling for maximum density
 10. **B** - CXL provides memory expansion and cache-coherent access for AI systems
-11. **C** - Approximately 1.3 Tbps/mm for the advanced package module
+11. **D** - UCIe 1.0 advanced package reaches up to 1317 GB/s/mm of shoreline bandwidth at 32 GT/s, about 10.5 Tbps/mm (the 1.3 figure is TB/s/mm, not Tbps/mm)
 12. **C** - PCIe supports up to 2 retimers per link
 13. **C** - AMD uses Infinity Fabric for inter-chip connectivity
 14. **B** - 128b/130b has 2/130 = 1.54% overhead

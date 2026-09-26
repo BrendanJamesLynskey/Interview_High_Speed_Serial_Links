@@ -56,20 +56,19 @@ BW density (2-row): 800 GB/s / 8.7 mm = 91.9 GB/s/mm = 0.735 Tbps/mm
 BW density (4-row): 800 GB/s / 4.3 mm = 186 GB/s/mm = 1.49 Tbps/mm
 ```
 
-The 4-row configuration exceeds the UCIe advanced package target of 1.3 Tbps/mm, confirming the design is feasible but aggressive. The 2-row configuration at 0.735 Tbps/mm is more conservative and easier to implement.
+Both are far below what UCIe 1.0 advanced package allows: up to 1317 GB/s/mm of shoreline bandwidth at 32 GT/s (about 10.5 Tbps/mm). UCIe reaches that with many more bump rows per module than 2 or 4, so either configuration is conservative; the edge length could shrink considerably with a deeper bump array.
 
 ### Step 5: Verify power budget
 
-UCIe advanced package power: 0.5-1.0 pJ/bit (typical for short-channel, low-swing links).
+UCIe 1.0 targets 0.25 pJ/bit for the advanced package (0.5 pJ/bit is the standard-package figure).
 
 ```
 Total data rate: 800 GB/s = 6.4 Tbps
+Power at 0.25 pJ/bit (UCIe advanced target): 6.4e12 * 0.25e-12 = 1.6 W
 Power at 0.5 pJ/bit: 6.4e12 * 0.5e-12 = 3.2 W
-Power at 1.0 pJ/bit: 6.4e12 * 1.0e-12 = 6.4 W
-Power at 0.75 pJ/bit (typical): 6.4e12 * 0.75e-12 = 4.8 W
 ```
 
-The 2W power budget is insufficient for 800 GB/s at typical UCIe power efficiency. The design must either: reduce the target bandwidth to approximately 400 GB/s (which fits within 2W at 0.5 pJ/bit), use more aggressive low-power design (targeting 0.3 pJ/bit), or increase the power budget to 4-5W.
+A PHY that meets the UCIe advanced-package efficiency fits the 2 W budget with 0.4 W to spare. At 0.5 pJ/bit (a standard-package-class PHY) it would need 3.2 W, and the design would have to reduce bandwidth to about 500 GB/s or raise the budget.
 
 ### Step 6: Verify latency budget
 
@@ -92,13 +91,13 @@ This is within the 3 ns budget with 1 ns margin.
 | Total bumps | ~386 | - | - |
 | Die edge (2-row) | 8.7 mm | - | Feasible |
 | Die edge (4-row) | 4.3 mm | - | Aggressive |
-| Power | 4.8 W (typical) | 2 W | Exceeds budget |
+| Power | 1.6 W at 0.25 pJ/b (3.2 W at 0.5 pJ/b) | 2 W | Within budget at the UCIe target |
 | Latency | 2.0 ns | 3 ns | Within budget |
 
 ### Key Takeaways
 
 1. 800 GB/s bidirectional UCIe requires approximately 200 data lanes at 32 Gbps each.
 2. The die edge allocation (4.3-8.7 mm) is a significant fraction of a typical chiplet edge.
-3. Power is the binding constraint: 800 GB/s at typical UCIe efficiency requires 4-5W, exceeding the 2W budget.
+3. Power is the binding constraint: 800 GB/s needs 1.6 W at the UCIe advanced-package target of 0.25 pJ/b, but 3.2 W at 0.5 pJ/b — the PHY must actually reach the target efficiency.
 4. Latency (2 ns) comfortably meets the 3 ns requirement.
-5. Reducing power to meet budget requires either lower bandwidth or advanced low-power I/O design.
+5. Meeting the 2 W budget depends on achieving ~0.25 pJ/b; otherwise bandwidth must be reduced.

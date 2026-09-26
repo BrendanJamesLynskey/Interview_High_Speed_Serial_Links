@@ -171,4 +171,4 @@ IL(2 * f_Nyquist_PAM4) - IL(f_Nyquist_PAM4) > 9.54 dB
 2. For this channel, the loss increases by 20 dB from 28 to 56 GHz, far exceeding the 9.54 dB PAM4 penalty.
 3. PAM4 requires FEC, adding approximately 100 ns latency and 5.8% bandwidth overhead, but this is universally accepted for 112G links.
 4. The PAM4 link has sufficient margin (~8 dB) to absorb manufacturing variation and temperature effects.
-5. In AI systems, this tradeoff explains why all 112G interconnects (NVLink, PCIe Gen5/6, UCIe) use PAM4.
+5. This tradeoff explains why 100G-class lanes (e.g. 100G-per-lane Ethernet, PCIe Gen6 at 64 GT/s) use PAM4, whereas lower-rate or very short links such as PCIe Gen5 (32 GT/s) and UCIe remain NRZ.

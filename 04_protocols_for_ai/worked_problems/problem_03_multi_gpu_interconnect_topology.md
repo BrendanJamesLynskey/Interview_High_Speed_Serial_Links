@@ -2,7 +2,7 @@
 
 ## Problem Statement
 
-Design the interconnect topology for an 8-GPU AI training node. Each GPU has 18 NVLink 4.0 ports (each port provides 25 GB/s bidirectional bandwidth). The system requires: all-to-all communication for data-parallel gradient all-reduce, maximum bisection bandwidth, and minimum all-reduce latency for a 1 GB gradient tensor.
+Design the interconnect topology for an 8-GPU AI training node. Each GPU has 18 NVLink 4.0 ports (each port provides 50 GB/s bidirectional bandwidth, 25 GB/s each direction; 900 GB/s per GPU in total, per NVIDIA's H100 specification). The system requires: all-to-all communication for data-parallel gradient all-reduce, maximum bisection bandwidth, and minimum all-reduce latency for a 1 GB gradient tensor.
 
 Compare three topologies: (a) ring, (b) fully-connected via NVSwitch, and (c) 2D torus. Calculate the all-reduce time for each.
 
@@ -13,7 +13,7 @@ Compare three topologies: (a) ring, (b) fully-connected via NVSwitch, and (c) 2D
 ### Step 1: Define the parameters
 
 - 8 GPUs, each with 18 NVLink 4.0 ports
-- Each port: 25 GB/s bidirectional (12.5 GB/s each direction)
+- Each port: 50 GB/s bidirectional (25 GB/s each direction)
 - Gradient tensor: 1 GB per GPU
 - NVSwitch latency: 5 ns per hop (in addition to SerDes latency of ~20 ns per hop)
 
@@ -22,37 +22,18 @@ Compare three topologies: (a) ring, (b) fully-connected via NVSwitch, and (c) 2D
 In a ring, each GPU connects to its two neighbors. With 18 ports, we can allocate 9 ports per direction:
 
 ```
-BW per direction in ring: 9 * 12.5 GB/s = 112.5 GB/s
+BW per direction in ring: 9 * 25 GB/s = 225 GB/s
 ```
 
-Ring all-reduce time (using ring algorithm):
+Ring all-reduce time (reduce-scatter + allgather, each sending (N-1)/N of the data):
 ```
 T_ring = 2 * (N-1)/N * data_size / BW_ring
-T_ring = 2 * 7/8 * 1 GB / 112.5 GB/s
-T_ring = 1.75 * 1/112.5
-T_ring = 15.6 ms
+= 2 * (7/8) * 1e9 bytes / 225e9 bytes/s
+= 1.75 * 4.44 ms
+= 7.78 ms
 ```
 
-Wait, that seems too high. Let me reconsider. The ring all-reduce sends data_size * (N-1)/N in each phase, with two phases (scatter-reduce and allgather):
-
-```
-T_ring = 2 * (N-1)/N * data_size / BW_per_link
-= 2 * (7/8) * 1 GB / 112.5 GB/s
-= 15.56 us (microseconds, not milliseconds)
-```
-
-Actually: 1 GB / 112.5 GB/s = 8.89 ms. No:
-
-```
-1 GB = 1e9 bytes
-112.5 GB/s = 112.5e9 bytes/s
-1e9 / 112.5e9 = 8.89e-3 s = 8.89 ms
-T_ring = 2 * (7/8) * 8.89 ms = 15.56 ms
-```
-
-This is correct but very slow. The issue is that 1 GB at 112.5 GB/s takes 8.89 ms. Let me recheck: 1 GB / 112.5 GB/s = 0.00889 seconds = 8.89 ms. Yes, that is correct.
-
-Bisection bandwidth (ring): BW per link in each direction = 112.5 GB/s. The bisection cuts 2 links (ring has 2 links crossing any bisection), so bisection BW = 2 * 112.5 = 225 GB/s.
+Bisection bandwidth (ring): BW per link in each direction = 225 GB/s. The bisection cuts 2 links (ring has 2 links crossing any bisection), so bisection BW = 2 * 225 = 450 GB/s.
 
 ### Step 3: Topology B - Fully-connected via NVSwitch
 
@@ -60,54 +41,54 @@ With 4 NVSwitch ASICs, each GPU allocates approximately 18/7 = 2-3 ports per rem
 
 ```
 Ports per remote GPU: 18/7 ≈ 2.57
-BW per GPU pair: 2.57 * 25 GB/s = 64.3 GB/s bidirectional
+BW per GPU pair: 2.57 * 50 GB/s = 128.6 GB/s bidirectional
 ```
 
 Actually, with NVSwitch, the allocation is: each GPU connects all 18 ports to the NVSwitch fabric, and the NVSwitch provides any-to-any switching. The per-GPU bandwidth to the switch is:
 
 ```
-Per-GPU total BW: 18 * 25 GB/s = 450 GB/s bidirectional (225 GB/s each direction)
+Per-GPU total BW: 18 * 50 GB/s = 900 GB/s bidirectional (450 GB/s each direction)
 ```
 
 For all-reduce with a fully-connected topology (reduce-scatter + allgather):
 ```
 T_fc = 2 * (N-1)/N * data_size / per_GPU_BW
-T_fc = 2 * (7/8) * 1 GB / 225 GB/s
-T_fc = 1.75 / 225 = 7.78 ms
+T_fc = 2 * (7/8) * 1 GB / 450 GB/s
+T_fc = 1.75 / 450 = 3.89 ms
 ```
 
 But actually, the fully-connected topology can do better with a direct all-reduce:
 ```
 T_fc_direct = data_size / per_GPU_BW + latency_overhead
-= 1 GB / 225 GB/s + 7 * 25 ns (per hop latency per remote GPU)
-= 4.44 ms + 0.000175 ms
-= 4.44 ms
+= 1 GB / 450 GB/s + 7 * 25 ns (per hop latency per remote GPU)
+= 2.22 ms + 0.000175 ms
+= 2.22 ms
 ```
 
 No, the correct formula for ring-based all-reduce on a fully connected topology is the same ring algorithm but with higher per-link bandwidth. Alternatively, the recursive halving-doubling algorithm:
 
 ```
 T_rhd = log2(N) * (alpha + data_size / (N * BW_per_pair))
-= 3 * (25 ns + 1 GB / (8 * 64.3 GB/s))
-= 3 * (25 ns + 1.94 ms)
-= 3 * 1.94 ms = 5.83 ms
+= 3 * (25 ns + 1 GB / (8 * 128.6 GB/s))
+= 3 * (25 ns + 0.97 ms)
+= 3 * 0.97 ms = 2.92 ms
 ```
 
 For a properly optimized all-reduce on fully-connected:
 ```
 T_fc = 2 * (N-1)/N * data_size / per_GPU_BW_egress
-= 2 * 7/8 * 1e9 / (225e9)
-= 7.78 ms
+= 2 * 7/8 * 1e9 / (450e9)
+= 3.89 ms
 ```
 
-Bisection BW: 4 * 225 = 900 GB/s (4 GPUs on each side, each with 225 GB/s to the switch).
+Bisection BW: 4 * 450 = 1800 GB/s (4 GPUs on each side, each with 450 GB/s per direction to the switch).
 
 ### Step 4: Topology C - 2D Torus (4x2)
 
 In a 4x2 torus, each GPU has 4 neighbors (2 in each dimension). Allocate ports: 18/4 = 4.5 ports per neighbor = 4 ports per neighbor (16 used, 2 spare).
 
 ```
-BW per neighbor: 4 * 25 = 100 GB/s bidirectional (50 GB/s each direction)
+BW per neighbor: 4 * 50 = 200 GB/s bidirectional (100 GB/s each direction)
 ```
 
 All-reduce on 2D torus uses dimension-based reduction:
@@ -116,36 +97,31 @@ T_2d = sum over each dimension of: 2 * (N_dim - 1)/N_dim * data_size / BW_dim
 ```
 
 For 4x2 torus:
-- Dimension 1 (size 4): T_1 = 2 * 3/4 * 1 GB / 50 GB/s = 30 ms? 
-
-Let me recalculate: 1 GB / 50 GB/s = 20 ms.
-T_1 = 2 * (3/4) * 20 ms = 30 ms
-
-This is very slow. But note that after dimension 1, the data size is reduced by the dimension 1 factor. Actually, for the reduce-scatter phase in dimension 1, each GPU sends/receives 1/4 of the data:
+- Dimension 1 (size 4): 1 GB / 100 GB/s = 10 ms, so T_1 = 2 * (3/4) * 10 ms = 15 ms
 
 ```
-T_1_scatter = (N1-1)/N1 * data_size / BW_dim1 = 3/4 * 1 GB / 50 GB/s = 15 ms
-T_1_gather = same = 15 ms
+T_1_scatter = (N1-1)/N1 * data_size / BW_dim1 = 3/4 * 1 GB / 100 GB/s = 7.5 ms
+T_1_gather = same = 7.5 ms
 ```
 
-Hmm, this is the right calculation but 30 ms is indeed slow.
+The size-2 dimension then works on the reduced (1/4) data and adds a little more, so the total is roughly 15-17 ms.
 
-Bisection BW: the bisection of a 4x2 torus cuts 2*2 = 4 links in dimension 1 plus 2*4 = 8 links in dimension 2. Total bisection BW = min(4*100, 8*100) = 400 GB/s.
+Bisection BW: the bisection of a 4x2 torus cuts 2*2 = 4 links in dimension 1 plus 2*4 = 8 links in dimension 2. Total bisection BW = min(4*200, 8*200) = 800 GB/s.
 
 ### Step 5: Compare topologies
 
 | Metric | Ring | Fully-Connected | 2D Torus |
 |--------|------|----------------|----------|
 | Links per GPU | 2 (9 ports each) | 18 (to switch) | 4 (4 ports each) |
-| BW per link (bidir.) | 225 GB/s | 450 GB/s total | 100 GB/s |
-| Bisection BW | 225 GB/s | 900 GB/s | 400 GB/s |
-| All-reduce time (1 GB) | 15.6 ms | 7.8 ms | ~30 ms |
+| BW per link (bidir.) | 450 GB/s | 900 GB/s total | 200 GB/s |
+| Bisection BW | 450 GB/s | 1800 GB/s | 800 GB/s |
+| All-reduce time (1 GB) | 7.8 ms | 3.9 ms | ~15 ms |
 | Extra hardware | None | 4 NVSwitch | None |
 | Hop count (worst case) | 4 | 1 (via switch) | 3 |
 
 ### Step 6: Practical considerations
 
-The fully-connected topology with NVSwitch provides the best all-reduce performance (7.8 ms for 1 GB) at the cost of 4 additional NVSwitch ASICs. The ring topology is simpler but 2x slower. The 2D torus is the slowest due to the lower per-link bandwidth (spreading 18 ports across 4 neighbors instead of concentrating them).
+The fully-connected topology with NVSwitch provides the best all-reduce performance (3.9 ms for 1 GB) at the cost of 4 additional NVSwitch ASICs. The ring topology is simpler but 2x slower. The 2D torus is the slowest due to the lower per-link bandwidth (spreading 18 ports across 4 neighbors instead of concentrating them).
 
 In practice, NVIDIA uses the fully-connected topology for DGX systems precisely because the all-reduce performance advantage justifies the NVSwitch cost and power.
 
@@ -155,7 +131,7 @@ The fully-connected topology via NVSwitch is optimal for an 8-GPU training node,
 
 ### Key Takeaways
 
-1. Bisection bandwidth is the key metric: fully-connected provides 900 GB/s vs 225 GB/s for ring.
+1. Bisection bandwidth is the key metric: fully-connected provides 1800 GB/s vs 450 GB/s for ring.
 2. All-reduce time scales inversely with bisection bandwidth for large data sizes.
 3. NVSwitch's cost (power, silicon area) is justified by the training efficiency improvement.
 4. The 2D torus is bandwidth-inefficient for 8 GPUs because ports are spread across 4 neighbors.

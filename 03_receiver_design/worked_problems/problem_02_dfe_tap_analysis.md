@@ -195,7 +195,7 @@ For P_prop = 0.15 (estimated):
 BER_effective = BER_0 / 0.85 = 1.18 * BER_0
 ```
 
-The error propagation increases the effective BER by about 18%, which is approximately 0.7 dB of SNR penalty.
+The error propagation increases the effective BER by about 18%. Because BER falls so steeply with SNR, this is a small SNR penalty: at BER ≈ 1e-6 the Q needed moves from 4.753 to 4.72, about 0.06 dB. (Error propagation matters more for burst-error statistics and FEC than for the average BER.)
 
 ### Result
 
@@ -222,4 +222,4 @@ DFE tap coefficients (normalized):
 2. The 5-tap DFE recovers 112 mV of inner eye height from a closed eye.
 3. The h1 error propagation risk is significant (42.9% eye reduction), which is characteristic of PAM4.
 4. Residual ISI from h[6] and beyond is small (0.01) and contributes only 3% eye reduction.
-5. The error propagation BER penalty (~0.7 dB) must be accounted for in the link budget.
+5. The error propagation average-BER penalty is small (~0.06 dB at 1e-6), but the resulting error bursts must be accounted for in the FEC design.

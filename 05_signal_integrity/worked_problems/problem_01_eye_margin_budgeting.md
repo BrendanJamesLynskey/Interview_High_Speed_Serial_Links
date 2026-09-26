@@ -123,7 +123,7 @@ This is a generous timing margin, indicating the link is voltage-limited rather 
 ### Key Takeaways
 
 1. The link has excellent COM margin (9 dB vs 3 dB requirement), indicating a short or well-designed channel.
-2. Random noise (2.5 mV RMS) and deterministic ISI (8 mV pp) contribute roughly equally to eye closure.
+2. Random noise dominates the eye closure: at BER 1e-6 it closes 2 x 4.75 x 2.5 = 23.75 mV versus 8 mV for the residual ISI (17.5 mV vs 8 mV at 2.4e-4).
 3. The link is voltage-limited (the timing margin of 0.726 UI is much larger than the voltage margin equivalent).
-4. FEC relaxes the BER target from 1e-12 to 2.4e-4, providing approximately 10 dB of effective coding gain in the COM calculation.
+4. FEC relaxes the BER target from 1e-12 to 2.4e-4, i.e. Q from 7.03 to 3.49 — about 6 dB of effective relief in the Q-scaled noise term of the COM calculation.
 5. The excess margin (6 dB above requirement) could tolerate significant manufacturing variation.

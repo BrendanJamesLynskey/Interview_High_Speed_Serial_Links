@@ -119,12 +119,18 @@ y[3] = (-0.0921)(0) + (0.6333)(−0.04) + (0.2745)(−0.08)
 y[3] = 0 + (−0.0253) + (−0.0220) = -0.0473
 ```
 
+The FIR also creates two small new terms at the edges of the convolution:
+```
+y[-2] = c[-1]*h[-1] = (-0.0921)(0.08) = -0.0074   (new second pre-cursor)
+y[4]  = c[1]*h[3]   = (0.2745)(-0.04) = -0.0110
+```
+
 ### Step 6: Calculate residual ISI and signal-to-ISI ratio
 
 ```
 Main cursor amplitude: y[0] = 0.3933
-Residual ISI: |y[2]| + |y[3]| = 0.1156 + 0.0473 = 0.1629
-Signal-to-ISI ratio: 0.3933 / 0.1629 = 2.41 (7.7 dB)
+Residual ISI: |y[-2]| + |y[2]| + |y[3]| + |y[4]| = 0.0074 + 0.1156 + 0.0473 + 0.0110 = 0.1813
+Signal-to-ISI ratio: 0.3933 / 0.1813 = 2.17 (6.7 dB)
 ```
 
 ### Step 7: Compare to unequalized case
@@ -142,12 +148,12 @@ Signal-to-ISI ratio: 0.55 / 0.45 = 1.22 (1.7 dB)
 | Metric | Unequalized | FIR Equalized | Improvement |
 |--------|-------------|---------------|-------------|
 | Main cursor | 0.55 | 0.39 | Reduced (cost of FIR) |
-| Total ISI | 0.45 | 0.16 | 64% reduction |
-| Signal-to-ISI | 1.22 (1.7 dB) | 2.41 (7.7 dB) | +6.0 dB |
-| Pre-cursor ISI | 0.08 | 0.00 | Eliminated |
+| Total ISI | 0.45 | 0.18 | 60% reduction |
+| Signal-to-ISI | 1.22 (1.7 dB) | 2.17 (6.7 dB) | +5.0 dB |
+| Pre-cursor ISI | 0.08 | 0.007 (at n = -2) | Nearly eliminated |
 | 1st post-cursor ISI | 0.25 | 0.00 | Eliminated |
 
-The TX FIR provides a 6 dB improvement in signal-to-ISI ratio by eliminating the pre-cursor and first post-cursor ISI. The main cursor amplitude is reduced from 0.55 to 0.39 (a 3.0 dB penalty in absolute amplitude), but the ISI reduction more than compensates. The remaining residual ISI at n=2 and n=3 must be handled by the receiver's DFE.
+The TX FIR provides a 5 dB improvement in signal-to-ISI ratio by eliminating the first pre-cursor and first post-cursor ISI. The main cursor amplitude is reduced from 0.55 to 0.39 (a 2.9 dB penalty in absolute amplitude), but the ISI reduction more than compensates. The residual post-cursor ISI at n=2 to 4 must be handled by the receiver's DFE; the small new pre-cursor at n=-2 is not DFE-correctable.
 
 ### Key Takeaways
 

@@ -142,11 +142,11 @@ The intermediate levels (1 and 2) have a different effective impedance because s
 Assuming the pull-up and pull-down unit cells have the same on-resistance (ideally matched):
 
 Level 3: N_up = 8, N_down = 0 -> Z = 400/8 = 50 ohms (from pull-ups only)
-Level 2: N_up = 5.33, N_down = 2.67 -> effective Z depends on the parallel combination
-Level 1: N_up = 2.67, N_down = 5.33 -> symmetric to level 2
+Level 2: N_up = 5.33, N_down = 2.67 -> Z = (400/5.33) || (400/2.67) = 75 || 150 = 50 ohms
+Level 1: N_up = 2.67, N_down = 5.33 -> symmetric to level 2, also 50 ohms
 Level 0: N_up = 0, N_down = 8 -> Z = 400/8 = 50 ohms (from pull-downs only)
 
-The intermediate levels have a lower effective impedance (because both pull-up and pull-down contribute in parallel), which causes a level-dependent impedance variation. This is mitigated by adding impedance compensation segments that are always on (connected to the common-mode voltage) to maintain constant output impedance across all levels.
+Because the supplies are AC ground, the pull-up and pull-down segments appear in parallel, so with matched unit cells the output impedance stays at 400/8 = 50 ohms at every level — the split only sets the output voltage. Level-dependent impedance variation comes from pull-up/pull-down mismatch and the voltage dependence of R_on, not from the segment split itself; this residual is what extra compensation segments are used to trim.
 
 ### Result
 
@@ -157,5 +157,5 @@ The calibration system with 32 segments can cover the full PVT range with worst-
 1. PVT variation can cause 40% or more change in transistor on-resistance.
 2. Calibration with 32 segments provides more than adequate range for this PVT spread.
 3. The quantization error from integer segment counts limits the achievable impedance accuracy.
-4. PAM4 level-dependent impedance variation requires additional compensation.
+4. With matched pull-up/pull-down cells the SST impedance is level-independent; residual PAM4 level-dependent variation comes from mismatch and R_on nonlinearity.
 5. Fast corner (low resistance) is typically the hardest to calibrate because fewer segments are used, giving coarser resolution.

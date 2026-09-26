@@ -42,13 +42,13 @@ Assuming this is integrated from 12 kHz to 20 MHz (the spec bandwidth), the aver
 
 ```
 S_ref(f) ≈ 3.855e-8 / (20e6 - 12e3) ≈ 1.93e-15 rad^2/Hz
-L_ref = 10*log10(1.93e-15 / 2) = -147 dBc/Hz (approximate average)
+L_ref = 10*log10(1.93e-15 / 2) = -150.2 dBc/Hz (approximate average)
 ```
 
 At the PLL output, this is multiplied by N^2:
 
 ```
-L_ref_out = L_ref + 20*log10(N) = -147 + 20*log10(179.2) = -147 + 45.1 = -101.9 dBc/Hz
+L_ref_out = L_ref + 20*log10(N) = -150.2 + 20*log10(179.2) = -150.2 + 45.1 = -105.1 dBc/Hz
 ```
 
 This contributes within the PLL bandwidth (DC to 4 MHz).
@@ -107,11 +107,21 @@ sigma_jitter_in_band = sigma_phase / (2*pi*f_out) = 0.0497 / (2*pi*28e9)
 = 282 fs RMS
 ```
 
-This already exceeds the 120 fs budget, suggesting the charge pump noise spec of -95 dBc/Hz is too high. Let me reconsider: -95 dBc/Hz is likely the charge pump noise referred to the *input* of the PLL (before multiplication). Let's use a more realistic model.
+This already exceeds the 120 fs budget. Adding the reference contribution from Step 2 (-105.1 dBc/Hz) raises the in-band floor to -94.6 dBc/Hz and the in-band jitter to 296 fs. (Reading -95 dBc/Hz as input-referred would be far worse: +45 dB at the output.)
 
-### Step 3 (revised): Model the in-band noise properly
+**With the stated -95 dBc/Hz charge-pump floor, the PLL fails the budget by about 2.5x.**
 
-A more realistic charge pump noise at the PLL output, for a well-designed LC-PLL, is approximately -105 dBc/Hz within the loop bandwidth. Let us use this value.
+### Step 3 (continued): In-band floor needed to meet the budget
+
+Allowing for the VCO (16 fs, Step 4) and the doubler (20 fs, Step 7), the in-band part may use:
+
+```
+sigma_in_band <= sqrt(120^2 - 16^2 - 20^2) = 117 fs
+sigma_phase <= 117e-15 * 2*pi*28e9 = 0.0206 rad
+L_in_band <= 10*log10(0.0206^2 / (2 * 3.9e6)) = -102.6 dBc/Hz
+```
+
+With the reference already contributing -105.1 dBc/Hz, the charge pump must be at or below about -106.3 dBc/Hz — roughly 11 dB better than specified. As a what-if, a charge-pump floor of -105 dBc/Hz alone gives:
 
 ```
 sigma_phase_in_band^2 = 2 * 10^(-105/10) * (4e6 - 1e5)
@@ -121,6 +131,8 @@ sigma_phase_in_band = 0.0157 rad
 
 sigma_jitter_in_band = 0.0157 / (2*pi*28e9) = 89.2 fs RMS
 ```
+
+but together with the -105.1 dBc/Hz reference this becomes -102.0 dBc/Hz (126 fs), still just over the allowance. The steps below use the 89.2 fs charge-pump-only figure to show how the remaining contributions combine.
 
 ### Step 4: Calculate VCO noise contribution (out-of-band)
 
@@ -205,7 +217,7 @@ Still within the 120 fs budget with 27 fs margin.
 | **Budget** | **120** | **100%** |
 | **Margin** | **27.2** | **22.7%** |
 
-The PLL meets the jitter budget with 22.7% margin. The jitter is dominated by the in-band contribution (charge pump and reference noise), which is typical for LC-PLLs with a relatively wide 4 MHz loop bandwidth.
+**This table is the what-if case (charge pump improved to -105 dBc/Hz, reference noise ignored).** As specified (-95 dBc/Hz), the total is about 297 fs RMS and the PLL fails the 120 fs budget; including the reference noise, even the -105 dBc/Hz case reaches ~128 fs. The in-band floor must be at or below -102.6 dBc/Hz in total. The jitter is dominated by the in-band contribution (charge pump and reference noise), which is typical for LC-PLLs with a relatively wide 4 MHz loop bandwidth.
 
 ### Key Takeaways
 
@@ -213,4 +225,4 @@ The PLL meets the jitter budget with 22.7% margin. The jitter is dominated by th
 2. The VCO out-of-band contribution is small because the LC-VCO has excellent phase noise and the 1/f^2 noise integrates to a finite value.
 3. Reducing the loop bandwidth would reduce the in-band contribution but increase the VCO contribution; the 4 MHz bandwidth is near the optimal crossover.
 4. The frequency doubler adds a modest but non-negligible jitter contribution.
-5. The 22.7% margin is adequate for nominal conditions but may be consumed by PVT variations in production.
+5. As specified the PLL fails; closing the budget needs an in-band floor of about -102.6 dBc/Hz or better (charge pump at or below about -106 dBc/Hz).

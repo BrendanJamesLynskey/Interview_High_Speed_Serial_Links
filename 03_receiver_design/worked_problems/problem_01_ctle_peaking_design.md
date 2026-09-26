@@ -41,144 +41,92 @@ f_p = 63.7 GHz
 
 This pole is above the Nyquist frequency, which is correct (the CTLE should not roll off before Nyquist).
 
-### Step 3: Determine the zero frequency for 12 dB peaking
+### Step 3: Include the degeneration pole
 
-For a single zero-single pole CTLE, the peaking at the Nyquist frequency relative to DC is approximately:
-
-```
-Peaking = 20 * log10(sqrt(1 + (f_N/f_z)^2) / sqrt(1 + (f_N/f_p)^2))
-```
-
-Since f_p >> f_N (63.7 GHz >> 28 GHz), the denominator simplifies:
+A source-degenerated stage does not have a single zero and a single pole. The R_s-C_s network gives a zero *and* a second pole:
 
 ```
-sqrt(1 + (28/63.7)^2) = sqrt(1 + 0.193) = sqrt(1.193) = 1.092
+H(f) / A_DC = (1 + j f/f_z) / ((1 + j f/f_p2) * (1 + j f/f_p))
+
+f_z  = 1 / (2 * pi * R_s * C_s)
+f_p2 = (1 + gm * R_s) * f_z          (degeneration pole)
+f_p  = 63.7 GHz                       (load pole, Step 2)
 ```
 
-For 12 dB peaking:
-
-```
-10^(12/20) = sqrt(1 + (f_N/f_z)^2) / 1.092
-3.981 = sqrt(1 + (28/f_z)^2) / 1.092
-4.347 = sqrt(1 + (28/f_z)^2)
-18.9 = 1 + (28/f_z)^2
-17.9 = (28/f_z)^2
-f_z = 28 / sqrt(17.9) = 28 / 4.23 = 6.62 GHz
-```
+The ratio A_HF / A_DC = 1 + gm * R_s is the most peaking the stage can ever give; the value at 28 GHz is lower. (Setting 1 + gm * R_s = 3.98, i.e. 12 dB, with f_z = 6.62 GHz would put f_p2 at 26.4 GHz and deliver only 8.7 dB at 28 GHz.)
 
 ### Step 4: Calculate the degeneration components
 
-The zero frequency is determined by the RC degeneration network:
+Choose 1 + gm * R_s = 5, which places the peak close to Nyquist:
 
 ```
-f_z = 1 / (2 * pi * R_s * C_s)
+R_s = (5 - 1) / 40e-3 = 100 ohms
+A_DC = gm * R_L / (1 + gm * R_s) = 4.0 / 5 = 0.8 (-1.9 dB)
+A_HF = gm * R_L = 4.0 (12 dB)
 ```
 
-The DC gain with degeneration:
+Solving |H(28 GHz)| / A_DC = 10^(12/20) = 3.981 for f_z (with f_p2 = 5 * f_z and f_p = 63.7 GHz) gives:
 
 ```
-A_DC = gm * R_L / (1 + gm * R_s)
+f_z  = 3.26 GHz
+f_p2 = 5 * 3.26 = 16.3 GHz
+C_s = 1 / (2 * pi * f_z * R_s) = 1 / (2 * pi * 3.26e9 * 100) = 488 fF
 ```
 
-The high-frequency gain (when C_s shorts R_s):
+### Step 5: Verify the response
 
 ```
-A_HF = gm * R_L = 40e-3 * 100 = 4.0 (12 dB)
+|H(28 GHz)| / A_DC = |1 + j28/3.26| / (|1 + j28/16.3| * |1 + j28/63.7|)
+                   = 8.65 / (1.99 * 1.09) = 3.98  (12.0 dB)
 ```
 
-We need A_HF / A_DC = 10^(12/20) = 3.981:
-
-```
-A_HF / A_DC = (1 + gm * R_s)
-3.981 = 1 + 40e-3 * R_s
-R_s = 2.981 / 40e-3 = 74.5 ohms
-```
-
-Now calculate C_s:
-
-```
-C_s = 1 / (2 * pi * f_z * R_s)
-C_s = 1 / (2 * pi * 6.62e9 * 74.5)
-C_s = 322 fF
-```
-
-### Step 5: Verify the DC and HF gains
-
-```
-A_DC = 40e-3 * 100 / (1 + 40e-3 * 74.5)
-A_DC = 4.0 / (1 + 2.98)
-A_DC = 4.0 / 3.98 = 1.005 (0.04 dB)
-
-A_HF = 4.0 (12.0 dB)
-
-Peaking = 12.0 - 0.04 = 11.96 dB (approximately 12 dB)
-```
+The peak of the response is 12.0 dB near 32 GHz — just above Nyquist, as intended. Absolute gain at 28 GHz: -1.9 + 12.0 = 10.1 dB.
 
 ### Step 6: Calculate the noise enhancement factor
 
-The noise enhancement factor (NEF) is the ratio of output noise power with the CTLE frequency response to the output noise power with a flat gain of A_DC:
+The noise enhancement factor (NEF) compares the output noise with the CTLE response to the output noise with a flat gain of A_DC, for white input noise over the receiver's noise bandwidth (taken here as DC to the 28 GHz Nyquist frequency):
 
 ```
-NEF = integral from 0 to infinity of |H(f)|^2 df / integral from 0 to infinity of |A_DC|^2 df
+NEF = (1 / 28 GHz) * integral from 0 to 28 GHz of |H(f) / A_DC|^2 df
 ```
 
-For practical calculation, integrate from 0 to 3*f_p (where the gain has rolled off sufficiently):
+Numerical integration of this design's response gives:
 
 ```
-NEF = (1 / BW_noise) * integral of |H(f)/A_DC|^2 df
+NEF ≈ 9.5
+NEF_dB = 10*log10(9.5) = 9.8 dB
 ```
 
-The noise bandwidth with the CTLE response is:
-
-```
-BW_noise_CTLE = integral of |H(f)|^2 df / |H(0)|^2
-```
-
-For a single zero at f_z = 6.62 GHz and single pole at f_p = 63.7 GHz:
-
-```
-BW_noise_CTLE ≈ (pi/2) * f_p * (1 + (f_p/f_z)^2) / (1 + f_p/f_z)
-```
-
-Using a simpler approximation for the NEF:
-
-```
-NEF ≈ (f_p / f_z + 1) / 2 = (63.7/6.62 + 1) / 2 = (9.62 + 1) / 2 = 5.31
-NEF_dB = 10*log10(5.31) = 7.25 dB
-```
-
-This is a rough estimate. A more accurate numerical integration gives:
-
-```
-NEF ≈ sqrt(f_p / f_z) = sqrt(63.7/6.62) = sqrt(9.62) = 3.10
-NEF_dB = 10*log10(3.10) = 4.9 dB
-```
+(Neither shortcut — (f_p/f_z + 1)/2 or sqrt(f_p/f_z) — is a substitute for doing the integral.)
 
 ### Step 7: Calculate effective equalization gain
 
 ```
-Signal gain at Nyquist: 12 dB
-Noise enhancement: ~5 dB
-Effective SNR improvement: 12 - 5 = 7 dB
+Signal gain at Nyquist (relative to DC): 12 dB
+Noise enhancement (0-28 GHz): ~9.8 dB
+Effective SNR improvement (crude measure): 12 - 9.8 ≈ 2 dB
 ```
+
+This crude measure ignores the CTLE's main benefit — removing ISI — so it understates the CTLE's value; it does show why high peaking is expensive in noise.
 
 ### Result
 
 | Parameter | Value |
 |-----------|-------|
-| R_s (degeneration resistor) | 74.5 ohms |
-| C_s (degeneration capacitor) | 322 fF |
-| Zero frequency (f_z) | 6.62 GHz |
-| Pole frequency (f_p) | 63.7 GHz |
-| DC gain | 0.04 dB |
+| R_s (degeneration resistor) | 100 ohms |
+| C_s (degeneration capacitor) | 488 fF |
+| Zero frequency (f_z) | 3.26 GHz |
+| Degeneration pole (f_p2) | 16.3 GHz |
+| Load pole (f_p) | 63.7 GHz |
+| DC gain | -1.9 dB |
 | Peaking at 28 GHz | 12.0 dB |
-| Noise enhancement | ~5 dB |
-| Effective SNR improvement | ~7 dB |
+| Noise enhancement (0-28 GHz) | ~9.8 dB |
+| Effective SNR improvement (crude) | ~2 dB |
 
 ### Key Takeaways
 
-1. The zero frequency (~6.6 GHz) is about 1/4 of the Nyquist frequency for 12 dB peaking.
-2. The noise enhancement penalty (~5 dB) consumes nearly half the equalization gain.
-3. The effective SNR improvement (~7 dB) is the metric that matters for link budget.
-4. The degeneration capacitance (322 fF) is relatively large and may be challenging to implement on-die with good quality factor.
+1. The degeneration network adds a pole at (1 + gm*R_s)*f_z; ignoring it overstates the peaking (8.7 dB, not 12 dB, for the naive design). Here f_z = 3.3 GHz and f_p2 = 16.3 GHz put the peak near Nyquist.
+2. The noise enhancement (~9.8 dB over 0-28 GHz) consumes most of the 12 dB peaking.
+3. By the crude signal-minus-noise measure only ~2 dB remains; the CTLE's real value is ISI removal, which needs a full link (pulse-response/COM) analysis to quantify.
+4. The degeneration capacitance (488 fF) is relatively large and may be challenging to implement on-die with good quality factor.
 5. A multi-stage CTLE could achieve the same total peaking with less noise enhancement per stage.

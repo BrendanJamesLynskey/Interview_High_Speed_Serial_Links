@@ -40,7 +40,7 @@ Total input per batch: 32 * 4 KB = 128 KB
 Assuming requests are distributed equally across 4 GPUs: 128 KB / 4 = 32 KB per GPU per batch.
 
 ```
-Transfer time = 32 KB / 63 GB/s = 0.508 ns per batch per GPU
+Transfer time = 32 KB / 63 GB/s = 0.51 us per batch per GPU
 ```
 
 The input transfer is negligible compared to the batch processing time (typically 10-100 ms for a transformer inference batch).
@@ -51,10 +51,10 @@ PCIe utilization: less than 0.001% (trivially small).
 
 Tokens generated: 100 tokens/s per request * 32 requests = 3200 tokens/s total
 Token size: approximately 4 bytes (token ID + probability)
-Data rate: 3200 * 4 = 12.8 KB/s per GPU (for 8 requests per GPU)
+Data rate: 3200 * 4 = 12.8 KB/s in total, i.e. 3.2 KB/s per GPU (8 requests per GPU)
 
 ```
-PCIe utilization = 12.8 KB/s / 63 GB/s = 0.00002% (negligible)
+PCIe utilization = 3.2 KB/s / 63 GB/s = 0.000005% (negligible)
 ```
 
 ### Step 5: Consider KV-cache transfers (if using disaggregated serving)
@@ -74,15 +74,15 @@ Transfer time = 10.74 GB / 63 GB/s = 170 ms per request
 PCIe utilization: potentially 100% during KV-cache transfer
 ```
 
-This is significant and may bottleneck disaggregated inference architectures.
+This is significant and may bottleneck disaggregated inference architectures. (The 128-head, full multi-head-attention model is an assumption: Llama-2-70B itself uses grouped-query attention with 8 KV heads, i.e. 2 x 8 x 128 x 2 bytes x 80 layers = 327,680 bytes per token, or 0.67 GB for 2048 tokens — about 11 ms at 63 GB/s. Source: Hugging Face Llama-2-70b-hf config.json, num_key_value_heads = 8.)
 
 ### Result
 
 | Phase | Data per GPU | PCIe BW Utilization | Duration |
 |-------|-------------|-------------------|----------|
 | Model loading | 35 GB | ~100% | 0.56 s |
-| Input transfer | 32 KB/batch | < 0.001% | ~0.5 ns |
-| Token output | 12.8 KB/s | < 0.001% | Continuous |
+| Input transfer | 32 KB/batch | < 0.001% | ~0.5 us |
+| Token output | 3.2 KB/s | < 0.001% | Continuous |
 | KV-cache transfer | 10.74 GB | ~100% | 170 ms |
 
 PCIe Gen5 x16 is sufficient for standard inference workloads (model loading and token I/O). However, KV-cache transfers in disaggregated serving can saturate the PCIe link, making Gen6 (2x bandwidth) potentially necessary for advanced inference architectures.
