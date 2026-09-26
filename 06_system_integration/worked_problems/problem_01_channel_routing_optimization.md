@@ -26,7 +26,7 @@ Switching from Megtron 6 (0.75 dB/inch at 16 GHz) to Megtron 7 (0.55 dB/inch at 
 
 A retimer divides the channel into two segments. If placed at the trace midpoint: segment 1 = 1.5 + 6 x 0.75 = 6.0 dB (TX pkg + 6 inches trace), segment 2 = 6 x 0.75 + 2.0 + 1.5 = 8.0 dB (6 inches trace + connector + RX pkg). Moving it to 7.3 inches from the TX balances both segments at 7.0 dB. Each segment easily achieves COM >= 5 dB.
 
-Cost: retimer power (~4W for x16), latency (+5 ns), BOM cost (+5-25).
+Cost: retimer power (~4W for x16), latency (+5 ns), BOM cost (+$15-25; illustrative).
 
 ### Step 5: Evaluate Option D - Improve connector
 
@@ -43,13 +43,13 @@ Best approach for minimal disruption: combine B (material upgrade) + D (connecto
 
 ### Result
 
-| Option | Loss Reduction | New COM | Meets 3 dB? | Cost Impact |
+| Option | Loss Reduction | New COM | Meets 3 dB? | Cost Impact (illustrative) |
 |--------|---------------|---------|-------------|-------------|
 | A: Shorter trace | 3.0 dB | ~3.6 dB | Yes | Layout change |
 | B: Better material | 2.4 dB | ~3.3 dB | Barely | +30% PCB cost |
-| C: Add retimer | N/A (two segments) | ~5+ dB each | Yes | +4W, +0, +5ns |
-| D: Better connector | 1.0 dB | ~2.6 dB | No | + |
-| B+D: Material + connector | 3.4 dB | ~3.8 dB | Yes | +35% PCB, + |
+| C: Add retimer | N/A (two segments) | ~5+ dB each | Yes | +4W, +$15-25, +5ns |
+| D: Better connector | 1.0 dB | ~2.6 dB | No | +$2-5 per connector |
+| B+D: Material + connector | 3.4 dB | ~3.8 dB | Yes | +35% PCB, +$2-5 |
 
 ### Key Takeaways
 
